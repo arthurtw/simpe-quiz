@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simple quiz</title>
+<style>
+body { margin: 0; color: #4d4e53; font-family: "Helvetica Neue", Helvetica, sans-serif; }
+ol { margin: 0; }
+div.divider { height: 0.5em; }
+input[type="submit"] { background: #ffe; outline: none; }
+span.correct::before { content: "✓"; color: #3a3; }
+span.incorrect::before { content: "✗"; color: #d51; }
+</style>
+<script>
+
+/*
+ * Copyright 2016 Twincl Inc.
+ * MIT License
+ *
+ * Simple Quiz
+ * A Twincl plugin for twinclet-simple-quiz
+ */
+
+window.onload = function () { new Quiz().init(); }
+
+var Dictionary = {
+  en: { Answer: 'Answer' },
+  'zh-Hant': { Answer: '對答' }
+};
+
+function Quiz(elem) {
+  this.elem = elem || document.body.firstElementChild;
+  this.prefix = window.name + '.';
+}
+
+Quiz.prototype.init = function () {
+  if (window.parent === window) {
+    this.elem.innerHTML = '<h2>Simple Quiz</h2>';
+    return;
+  }
+  TL.init(function (result) {
+    this.items = result.items;
+    this.dict = Dictionary[result.lang] || Dictionary.en;
+    var multiple = this.items.length > 1;
+    var markup = this.items.map(function (item, i) {
+      var html = this._renderItem(item, i);
+      return multiple ? '<li>' + html + '</li>' : html;
+    }.bind(this)).join('\n');
+    this.elem.innerHTML = '<form>' + (!multiple ? markup : (result.item.start ? '<ol start='
+      + result.item.start + '>' : '<ol>') + markup + '</ol>') + '<input type=submit name="check" value="'
+      + this.dict.Answer + '">&nbsp; <span id="score"></span></form>';
+    this.form = document.forms[0];
+    this.form.onsubmit = this.checkAnswer.bind(this);
+    this.scoreElem = document.getElementById('score');
+    TL.send({command: 'screen', height: this.elem.scrollHeight + 2});
+  }.bind(this));
+}
+
+Quiz.prototype._renderItem = function (item, i) {
+  var nradio = 0;
+  var text = item.data.replace(/<([^\s>]*\s|script)/ig, '&lt;$1');
+  var name = ' name="' + this.prefix + i + '"';
+  var size = ' size=' + (item.size || 15);
+  var hint = item.hint ? ' placeholder="' + item.hint + '"' : '';
+  return !item.choice ? text + '<p><input type=text' + name + size + hint + '></p>' :
+    text.replace(/\n- +(\S.*)/g, function (m, p1) {
+      return '<br><label><input type=radio' + name + ' value=' + (++nradio) + '> ' + p1 + '</label>';
+    }).replace('<br><label>', '<div class="divider"></div><label>') + '<p></p>';
+}
+
+Quiz.prototype.checkAnswer = function () {
+  var results = this.items.map(function (item, i) {
+    var value = this.form.elements[this.prefix + i].value;
+    return item.choice ? +value === +item.choice : value === item.answer ||
+      !!value.match(new RegExp('\\b' + item.answer + '\\b', 'i'));
+  }.bind(this));
+  this.scoreElem.innerHTML = results.map(function (r) {
+    return '<span class="' + (r ? '' : 'in') + 'correct"> </span>';
+  }).join('');
+  return false;
+}
+
+window.TL=window.TL||{version:"1.0",init:function(cb){TL.send({command:"init"}
+,cb)},_c:0,_r:(document.referrer.match(/^https:\/+([\w-.]+\.)?twincl.com\//)||
+[""])[0],send:function(m,cb){var id=m._id=++TL._c;m._ver=TL.version;if(cb){var
+ln=function(m){var o=m.data;if(o&&o._id===id){r();cb(o.data)}};var r=function(
+){window.removeEventListener("message",ln)};window.addEventListener("message",
+ln);setTimeout(r,3e4)}window.parent.postMessage(m,TL._r)}};
+
+</script>
+</head>
+<body>
+<div id="content"></div>
+</body>
+</html>
