@@ -1,6 +1,6 @@
 # Simple quiz
 
-A Twincl plugin hosted on Google Cloud Storage <https://twinclet-simple-quiz.storage.googleapis.com/simple-quiz.html>.
+A RICH player hosted on Google Cloud Storage <https://rich-simple-quiz.storage.googleapis.com/simple-quiz.html>.
 
-Registration and usage page: <https://twincl.com/plugin/register/*687>
+Usage: <https://twincl.com/rich/player/*687>
 
